@@ -3,11 +3,33 @@ declare const $storage: any
 
 function init() {
   $ui.register((ctx: any) => {
+    const LOG_PREFIX = "[AnimeSkip]"
+    function log(message: string, data?: any) {
+      try {
+        if (data !== undefined) console.log(LOG_PREFIX, message, data)
+        else console.log(LOG_PREFIX, message)
+      } catch (error) {
+      }
+    }
+
+    function logError(message: string, error?: any) {
+      try {
+        if (error !== undefined) console.error(LOG_PREFIX, message, error)
+        else console.error(LOG_PREFIX, message)
+      } catch (e) {
+      }
+    }
+
     const tray = ctx.newTray({
       tooltipText: "Anime Skip",
-      iconUrl: "https://api.anime-skip.com/favicon.ico",
+      iconUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%230ea5e9'/><path d='M16 22h32v6H16zm0 14h32v6H16z' fill='white'/></svg>",
       withContent: true,
     })
+
+    if (ctx.toast && ctx.toast.info) {
+      ctx.toast.info("Anime Skip UI initialized")
+    }
+    log("UI initialized")
 
     const endpointRef = ctx.fieldRef("https://api.anime-skip.com/graphql")
     const clientIdRef = ctx.fieldRef("ZGfO0sMF3eCwLYf8yMSCJjlynwNGRXWE")
@@ -261,6 +283,8 @@ function init() {
       const clientId = (clientIdRef.current || "").trim()
       const authToken = (authTokenRef.current || "").trim()
 
+      log("GraphQL request", { endpoint, hasAuth: !!authToken, variables })
+
       if (!endpoint) throw new Error("Endpoint is required")
       if (!clientId) throw new Error("X-Client-ID is required")
 
@@ -281,8 +305,11 @@ function init() {
 
       const data = await res.json()
       if (data.errors && data.errors.length) {
+        logError("GraphQL error response", data.errors)
         throw new Error(data.errors[0].message || "GraphQL error")
       }
+
+      log("GraphQL success")
 
       return data.data
     }
@@ -358,6 +385,7 @@ function init() {
         }
 
         const shows = (data.data && data.data.searchShows) || []
+        log("Search shows completed", { search, count: shows.length })
         if (!shows.length) {
           resultText.set("No results.")
           return
@@ -379,6 +407,7 @@ function init() {
 
         resultText.set(lines.join("\n"))
       } catch (error: any) {
+        logError("Search shows failed", error)
         resultText.set("Anime Skip API request failed.")
         ctx.toast.error(error && error.message ? error.message : "Request failed")
       }
@@ -389,6 +418,7 @@ function init() {
         const showInfo = await resolveShowIdAuto((showIdRef.current || "").trim())
         const showId = showInfo.showId
         const episodeNumber = detectEpisodeNumber()
+        log("Timeline load started", { showId, showSource: showInfo.source, showTitle: showInfo.title, episodeNumber })
 
         if (!episodeNumber) {
           ctx.toast.error("Episode number is required (or must be detectable from current playback)")
@@ -411,6 +441,7 @@ function init() {
         )
 
         const episodes = episodesData.findEpisodesByShowId || []
+        log("Episodes fetched", { count: episodes.length, showId })
         let selected = null
 
         for (let i = 0; i < episodes.length; i++) {
@@ -424,6 +455,7 @@ function init() {
         }
 
         if (!selected) {
+          log("Episode not found", { showId, episodeNumber })
           resultText.set("Episode not found for this show ID and episode number.")
           loadedEpisodeText.set("Episode: not loaded")
           segmentsState.set([])
@@ -439,6 +471,7 @@ function init() {
 
         const timestamps = (timestampsData.findTimestampsByEpisodeId || []).slice()
         timestamps.sort((a: any, b: any) => (a.at || 0) - (b.at || 0))
+        log("Timestamps fetched", { count: timestamps.length, episodeId: selected.id })
 
         const baseDuration = parseNum(selected.baseDuration) || 0
         const segments = []
@@ -466,6 +499,10 @@ function init() {
         }
 
         segmentsState.set(segments)
+        log("Segments built", {
+          count: segments.length,
+          segments: segments.map((s: any) => ({ type: s.typeName, start: s.start, end: s.end })),
+        })
         loadedEpisodeText.set(
           "Episode: " + (selected.number ? "#" + selected.number + " " : "") + (selected.name || "Unnamed")
         )
@@ -495,6 +532,7 @@ function init() {
 
         refreshPlaybackUi()
       } catch (error: any) {
+        logError("Timeline load failed", error)
         resultText.set("Failed to load episode timeline.")
         ctx.toast.error(error && error.message ? error.message : "Request failed")
       }
@@ -517,6 +555,7 @@ function init() {
         }
 
         const delta = active.end - current + 0.05
+        log("Skip requested", { current, segment: active, delta })
         if (delta <= 0) {
           ctx.toast.info("Already at the end of this segment")
           return
@@ -527,6 +566,7 @@ function init() {
           ctx.videoCore.showMessage("Skipped " + active.typeName, 1500)
         }
       } catch (error) {
+        logError("Skip failed", error)
         ctx.toast.error("Skip failed")
       }
     }
@@ -538,6 +578,7 @@ function init() {
       $storage.set("animeSkip.showId", (showIdRef.current || "").trim())
       $storage.set("animeSkip.episodeNumber", (episodeNumberRef.current || "").trim())
       ctx.toast.success("Settings saved")
+      log("Settings saved")
     })
 
     ctx.registerEventHandler("anime-skip-search", async () => {
@@ -554,6 +595,7 @@ function init() {
 
     ctx.registerEventHandler("anime-skip-refresh-playback", () => {
       refreshPlaybackUi()
+      log("Playback refreshed manually")
     })
 
     ctx.registerEventHandler("anime-skip-skip", () => {
@@ -562,6 +604,7 @@ function init() {
 
     loadSettings()
     refreshPlaybackUi()
+    log("Initial state loaded")
 
     if (tray.onOpen) {
       tray.onOpen(() => {
