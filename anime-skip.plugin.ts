@@ -20,11 +20,20 @@ function init() {
       }
     }
 
-    const tray = ctx.newTray({
-      tooltipText: "Anime Skip",
-      iconUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%230ea5e9'/><path d='M16 22h32v6H16zm0 14h32v6H16z' fill='white'/></svg>",
-      withContent: true,
-    })
+    let tray: any = null
+    try {
+      tray = ctx.newTray({
+        tooltipText: "Anime Skip",
+        iconUrl: "https://seanime.rahim.app/logo_2.png",
+        withContent: true,
+      })
+    } catch (error) {
+      logError("newTray failed", error)
+      if (ctx.toast && ctx.toast.error) {
+        ctx.toast.error("Anime Skip: tray init failed")
+      }
+      return
+    }
 
     if (ctx.toast && ctx.toast.info) {
       ctx.toast.info("Anime Skip UI initialized")
@@ -622,40 +631,48 @@ function init() {
     }
 
     tray.render(() => {
-      return tray.stack([
-        tray.text("Anime Skip GraphQL"),
-        tray.text("Endpoint"),
-        tray.input({ fieldRef: endpointRef }),
-        tray.text("X-Client-ID"),
-        tray.input({ fieldRef: clientIdRef }),
-        tray.text("Auth token (optional)"),
-        tray.input({ fieldRef: authTokenRef }),
+      try {
+        return tray.stack([
+          tray.text("Anime Skip GraphQL"),
+          tray.text("Endpoint"),
+          tray.input({ fieldRef: endpointRef }),
+          tray.text("X-Client-ID"),
+          tray.input({ fieldRef: clientIdRef }),
+          tray.text("Auth token (optional)"),
+          tray.input({ fieldRef: authTokenRef }),
 
-        tray.text("Search shows"),
-        tray.input({ fieldRef: queryRef }),
-        tray.text("Search limit"),
-        tray.input({ fieldRef: limitRef }),
-        tray.button({ label: "Search Shows", onClick: "anime-skip-search" }),
+          tray.text("Search shows"),
+          tray.input({ fieldRef: queryRef }),
+          tray.text("Search limit"),
+          tray.input({ fieldRef: limitRef }),
+          tray.button({ label: "Search Shows", onClick: "anime-skip-search" }),
 
-        tray.text("Show ID"),
-        tray.input({ fieldRef: showIdRef }),
-        tray.text("Episode number"),
-        tray.input({ fieldRef: episodeNumberRef }),
-        tray.button({ label: "Load episode timeline", onClick: "anime-skip-load-timeline" }),
-        tray.button({ label: "Auto-detect and load current episode", onClick: "anime-skip-auto-load" }),
+          tray.text("Show ID"),
+          tray.input({ fieldRef: showIdRef }),
+          tray.text("Episode number"),
+          tray.input({ fieldRef: episodeNumberRef }),
+          tray.button({ label: "Load episode timeline", onClick: "anime-skip-load-timeline" }),
+          tray.button({ label: "Auto-detect and load current episode", onClick: "anime-skip-auto-load" }),
 
-        tray.button({ label: "Save settings", onClick: "anime-skip-save" }),
-        tray.button({ label: "Refresh playback", onClick: "anime-skip-refresh-playback" }),
-        tray.button({ label: "Skip current segment", onClick: "anime-skip-skip" }),
+          tray.button({ label: "Save settings", onClick: "anime-skip-save" }),
+          tray.button({ label: "Refresh playback", onClick: "anime-skip-refresh-playback" }),
+          tray.button({ label: "Skip current segment", onClick: "anime-skip-skip" }),
 
-        tray.text(loadedEpisodeText.get()),
-        tray.text(detectedText.get()),
-        tray.text("Timeline legend: I=Intro, C=Credits, P=Preview, R=Recap, ●=Current position"),
-        tray.text(timelineText.get()),
-        tray.text(playbackText.get()),
-        tray.text(activeSegmentText.get()),
-        tray.text(resultText.get()),
-      ])
+          tray.text(loadedEpisodeText.get()),
+          tray.text(detectedText.get()),
+          tray.text("Timeline legend: I=Intro, C=Credits, P=Preview, R=Recap, ●=Current position"),
+          tray.text(timelineText.get()),
+          tray.text(playbackText.get()),
+          tray.text(activeSegmentText.get()),
+          tray.text(resultText.get()),
+        ])
+      } catch (error) {
+        logError("tray.render failed", error)
+        return tray.stack([
+          tray.text("Anime Skip render error"),
+          tray.text("Check server logs for [AnimeSkip] entries."),
+        ])
+      }
     })
   })
 }
