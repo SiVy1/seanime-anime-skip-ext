@@ -1,7 +1,7 @@
 {
   "id": "anime-skip-plugin",
   "name": "Anime Skip",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "manifestURI": "https://raw.githubusercontent.com/SiVy1/seanime-anime-skip-ext/main/anime-skip.plugin.json",
   "language": "typescript",
   "type": "plugin",
@@ -25,5 +25,5 @@
       }
     }
   },
-  "isDevelopment": false
+  "isDevelopment": true
 }

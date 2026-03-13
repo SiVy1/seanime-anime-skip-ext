@@ -3,6 +3,14 @@ declare const $storage: any
 
 function init() {
   $ui.register((ctx: any) => {
+    try {
+      if (ctx.toast && ctx.toast.info) {
+        ctx.toast.info("Anime Skip: init() entered")
+      }
+      console.log("[AnimeSkip] init() entered")
+    } catch (error) {
+    }
+
     const LOG_PREFIX = "[AnimeSkip]"
     function log(message: string, data?: any) {
       try {
