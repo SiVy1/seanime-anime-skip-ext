@@ -1,0 +1,29 @@
+{
+  "id": "anime-skip-plugin",
+  "name": "Anime Skip",
+  "version": "1.0.0",
+  "manifestURI": "",
+  "language": "typescript",
+  "type": "plugin",
+  "description": "Anime Skip GraphQL integration with timeline skip controls",
+  "author": "Local",
+  "icon": "",
+  "website": "https://api.anime-skip.com",
+  "readme": "",
+  "notes": "",
+  "lang": "multi",
+  "payloadURI": "D:/Projekty/seanime-ext/anime-skip.plugin.ts",
+  "plugin": {
+    "version": "1",
+    "permissions": {
+      "scopes": ["storage", "playback"],
+      "allow": {
+        "networkAccess": {
+          "allowedDomains": ["api.anime-skip.com", "test.api.anime-skip.com"],
+          "reasoning": "The plugin needs access to Anime Skip official GraphQL API endpoints."
+        }
+      }
+    }
+  },
+  "isDevelopment": true
+}
