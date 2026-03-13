@@ -563,9 +563,20 @@ function init() {
     loadSettings()
     refreshPlaybackUi()
 
-    setInterval(() => {
-      refreshPlaybackUi()
-    }, 1000)
+    if (tray.onOpen) {
+      tray.onOpen(() => {
+        refreshPlaybackUi()
+      })
+    }
+
+    if (ctx.playback && ctx.playback.registerEventListener) {
+      try {
+        ctx.playback.registerEventListener(() => {
+          refreshPlaybackUi()
+        })
+      } catch (error) {
+      }
+    }
 
     tray.render(() => {
       return tray.stack([
